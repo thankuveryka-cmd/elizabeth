@@ -19,26 +19,60 @@ export type Cluster =
   | "Nai Thon"
   | "Nai Harn";
 
+/** Посуточная сдача — только при действующей гостиничной лицензии. */
+export type ShortTermOffer = {
+  nightlyUSD: number;
+  minNights: number;
+};
+
+/** Аренда от 30 дней. Легальна без лицензии, поэтому доступна почти везде. */
+export type LongTermOffer = {
+  /** Ставка в хай-сизон, ноябрь–апрель. */
+  monthlyHighUSD: number;
+  /** Ставка в лоу-сизон, май–октябрь. */
+  monthlyLowUSD: number;
+  minMonths: number;
+};
+
+export type SaleOffer = {
+  priceUSD: number;
+};
+
 export type Villa = {
   id: string;
   title: string;
   cluster: Cluster | string;
-  dealType: "sale" | "rent";
-  /** Продажа — цена объекта. Аренда — ставка за месяц (см. pricePeriod). */
-  priceUSD: number;
-  pricePeriod?: "total" | "month";
+
+  /**
+   * Что с этим домом можно делать. Один объект может одновременно сдаваться
+   * помесячно, сдаваться посуточно и продаваться — поэтому не одно поле,
+   * а набор предложений.
+   *
+   * ЖЁСТКОЕ ПРАВИЛО: `short` допустим только при `rentalLicensed === true`.
+   * Сдача менее чем на 30 дней без гостиничной лицензии нарушает Hotel Act.
+   * Правило проверяется на старте, см. assertOffersLegal ниже.
+   */
+  offers: {
+    short?: ShortTermOffer;
+    long?: LongTermOffer;
+    sale?: SaleOffer;
+  };
+
+  /** Есть ли у объекта действующая гостиничная лицензия. */
+  rentalLicensed: boolean;
+
   ownership: "freehold" | "leasehold" | "company";
   /** Пояснение к структуре владения — показываем в карточке, не прячем в договор. */
   ownershipNote: string;
   bedrooms: number;
   bathrooms: number;
+  /** Сколько человек размещается — для аренды это главный вопрос гостя. */
+  sleeps: number;
   landSizeSqm: number;
   livingAreaSqm: number;
   status: "ready" | "off-plan";
   /** Год сдачи для off-plan, год постройки для готовых. */
   year: number;
-  /** Критично для доходной аренды: есть ли у проекта гостиничная лицензия. */
-  rentalLicensed?: boolean;
   images: string[];
   /** Подписи к местам под реальную съёмку. */
   imageCaptions: string[];
@@ -51,8 +85,8 @@ export type Villa = {
   /** Честный минус — говорим до просмотра, а не после. */
   tradeoff: string;
   /** Кому объект подходит по задаче, а не по паспорту. */
-  fitsJobs: ("relocate" | "invest" | "second-home" | "try-first")[];
-  /** Расходы на содержание в год, USD — показываем всегда, это главный вопрос инвестора. */
+  fitsJobs: ("relocate" | "invest" | "second-home" | "try-first" | "holiday")[];
+  /** Расходы на содержание в год, USD — главный вопрос покупателя. */
   annualCostsUSD?: number;
 };
 
@@ -61,9 +95,12 @@ export const villas: Villa[] = [
     id: "layan-hillside-04",
     title: "Дом на склоне Layan, 4 спальни",
     cluster: "Layan",
-    dealType: "sale",
-    priceUSD: 1_650_000,
-    pricePeriod: "total",
+    offers: {
+      long: { monthlyHighUSD: 9_500, monthlyLowUSD: 6_200, minMonths: 3 },
+      sale: { priceUSD: 1_650_000 },
+    },
+    rentalLicensed: false,
+    sleeps: 8,
     ownership: "leasehold",
     ownershipNote:
       "Зарегистрированный договор аренды земли на 30 лет + отдельное право на строение (superficies) на имя покупателя.",
@@ -73,7 +110,6 @@ export const villas: Villa[] = [
     livingAreaSqm: 520,
     status: "ready",
     year: 2021,
-    rentalLicensed: false,
     images: ["hero", "pool", "living", "master", "view", "kitchen"],
     imageCaptions: [
       "Фасад с подъездной дороги, съёмка на закате",
@@ -112,9 +148,12 @@ export const villas: Villa[] = [
     id: "bangtao-garden-residence-11",
     title: "Резиденция в проекте Bang Tao, 4 спальни, сдача 2027",
     cluster: "Bang Tao",
-    dealType: "sale",
-    priceUSD: 1_250_000,
-    pricePeriod: "total",
+    // Дом ещё строится — сдавать нечего, пока только продажа
+    offers: {
+      sale: { priceUSD: 1_250_000 },
+    },
+    rentalLicensed: true,
+    sleeps: 8,
     ownership: "leasehold",
     ownershipNote:
       "Аренда земли на 30 лет с регистрацией в Земельном департаменте. Продавец предлагает опции продления — юридически это договорное обещание, а не гарантированный срок владения.",
@@ -124,7 +163,6 @@ export const villas: Villa[] = [
     livingAreaSqm: 410,
     status: "off-plan",
     year: 2027,
-    rentalLicensed: true,
     images: ["hero", "pool", "living", "plan", "common"],
     imageCaptions: [
       "Рендер фасада от девелопера — заменить на съёмку после сдачи",
@@ -160,9 +198,11 @@ export const villas: Villa[] = [
     id: "laguna-family-rent-07",
     title: "Дом в Laguna для длительной аренды, 4 спальни",
     cluster: "Laguna",
-    dealType: "rent",
-    priceUSD: 8_500,
-    pricePeriod: "month",
+    offers: {
+      long: { monthlyHighUSD: 8_500, monthlyLowUSD: 5_400, minMonths: 6 },
+    },
+    rentalLicensed: false,
+    sleeps: 8,
     ownership: "leasehold",
     ownershipNote:
       "Аренда у собственника от 6 месяцев. Договор на срок до 3 лет; на срок свыше 3 лет требуется регистрация.",
@@ -206,9 +246,14 @@ export const villas: Villa[] = [
     id: "kamala-ridge-02",
     title: "Вилла на гряде Kamala, 5 спален",
     cluster: "Kamala",
-    dealType: "sale",
-    priceUSD: 1_950_000,
-    pricePeriod: "total",
+    // Лицензия есть — единственный формат, где посуточная сдача законна
+    offers: {
+      short: { nightlyUSD: 1_450, minNights: 3 },
+      long: { monthlyHighUSD: 18_000, monthlyLowUSD: 11_000, minMonths: 1 },
+      sale: { priceUSD: 1_950_000 },
+    },
+    rentalLicensed: true,
+    sleeps: 10,
     ownership: "leasehold",
     ownershipNote:
       "Зарегистрированная аренда на 30 лет в составе управляемого проекта, строение оформляется на покупателя.",
@@ -218,7 +263,6 @@ export const villas: Villa[] = [
     livingAreaSqm: 680,
     status: "ready",
     year: 2019,
-    rentalLicensed: true,
     images: ["hero", "infinity", "living", "master", "sunset", "terrace"],
     imageCaptions: [
       "Общий вид виллы с дрона",
@@ -256,9 +300,12 @@ export const villas: Villa[] = [
     id: "cape-yamu-waterfront-05",
     title: "Вилла у воды Cape Yamu, 4 спальни",
     cluster: "Cape Yamu",
-    dealType: "sale",
-    priceUSD: 1_800_000,
-    pricePeriod: "total",
+    offers: {
+      long: { monthlyHighUSD: 12_000, monthlyLowUSD: 7_500, minMonths: 3 },
+      sale: { priceUSD: 1_800_000 },
+    },
+    rentalLicensed: false,
+    sleeps: 8,
     ownership: "company",
     ownershipNote:
       "Продавец предлагает сделку через тайскую компанию-владельца земли. Мы обязаны предупредить: номинальные структуры под системным контролем властей. Схему согласовываем с лицензированным юристом до задатка.",
@@ -268,7 +315,6 @@ export const villas: Villa[] = [
     livingAreaSqm: 610,
     status: "ready",
     year: 2016,
-    rentalLicensed: false,
     images: ["hero", "jetty", "living", "pool", "bay"],
     imageCaptions: [
       "Вилла со стороны залива Phang Nga",
@@ -305,9 +351,12 @@ export const villas: Villa[] = [
     id: "nai-thon-quiet-09",
     title: "Дом в Nai Thon, 3 спальни, сдача 2026",
     cluster: "Nai Thon",
-    dealType: "sale",
-    priceUSD: 1_150_000,
-    pricePeriod: "total",
+    // Сдача 2026 года — сдавать пока нечего
+    offers: {
+      sale: { priceUSD: 1_150_000 },
+    },
+    rentalLicensed: false,
+    sleeps: 6,
     ownership: "leasehold",
     ownershipNote:
       "Зарегистрированная аренда земли на 30 лет, строение оформляется отдельно на покупателя.",
@@ -317,7 +366,6 @@ export const villas: Villa[] = [
     livingAreaSqm: 320,
     status: "off-plan",
     year: 2026,
-    rentalLicensed: false,
     images: ["hero", "pool", "living", "plan"],
     imageCaptions: [
       "Рендер дома в рельефе участка",
@@ -352,9 +400,11 @@ export const villas: Villa[] = [
     id: "nai-harn-longterm-12",
     title: "Дом в Nai Harn для длительной аренды, 4 спальни",
     cluster: "Nai Harn",
-    dealType: "rent",
-    priceUSD: 6_200,
-    pricePeriod: "month",
+    offers: {
+      long: { monthlyHighUSD: 6_200, monthlyLowUSD: 4_100, minMonths: 6 },
+    },
+    rentalLicensed: false,
+    sleeps: 8,
     ownership: "leasehold",
     ownershipNote: "Аренда напрямую у собственника, от 6 месяцев, договор на 1 год с продлением.",
     bedrooms: 4,
@@ -396,9 +446,12 @@ export const villas: Villa[] = [
     id: "surin-estate-rent-03",
     title: "Вилла в Surin для длительной аренды, 5 спален",
     cluster: "Surin",
-    dealType: "rent",
-    priceUSD: 12_000,
-    pricePeriod: "month",
+    offers: {
+      short: { nightlyUSD: 1_100, minNights: 4 },
+      long: { monthlyHighUSD: 12_000, monthlyLowUSD: 7_800, minMonths: 1 },
+    },
+    rentalLicensed: true,
+    sleeps: 10,
     ownership: "leasehold",
     ownershipNote:
       "Аренда у управляющей компании проекта, от 3 месяцев, ставка меняется по сезону — ноябрь–апрель дороже.",
@@ -408,7 +461,6 @@ export const villas: Villa[] = [
     livingAreaSqm: 560,
     status: "ready",
     year: 2022,
-    rentalLicensed: true,
     images: ["hero", "pool", "living", "master", "view"],
     imageCaptions: [
       "Вилла с подъезда, вечерний свет",
@@ -443,7 +495,46 @@ export const villas: Villa[] = [
 
 /* --- Помощники ------------------------------------------------------- */
 
+/**
+ * Проверка легальности набора предложений.
+ *
+ * Посуточная сдача (менее 30 дней) в Таиланде — гостиничная деятельность,
+ * она требует лицензии по Hotel Act. Если объект без лицензии попадёт в
+ * каталог с посуточной ставкой, сайт будет предлагать нарушение закона.
+ * Поэтому падаем на старте, а не показываем это гостю.
+ */
+function assertOffersLegal(list: Villa[]): void {
+  for (const v of list) {
+    if (v.offers.short && !v.rentalLicensed) {
+      throw new Error(
+        `Вилла "${v.id}": посуточная ставка указана без гостиничной лицензии. ` +
+          `Сдача менее чем на 30 дней без лицензии нарушает Hotel Act. ` +
+          `Либо подтвердите лицензию (rentalLicensed: true), либо уберите offers.short.`,
+      );
+    }
+    if (!v.offers.short && !v.offers.long && !v.offers.sale) {
+      throw new Error(`Вилла "${v.id}": не указано ни одного предложения.`);
+    }
+  }
+}
+
+assertOffersLegal(villas);
+
 export const getVilla = (id: string) => villas.find((v) => v.id === id);
+
+/** Режимы, в которых объект доступен. Порядок — от аренды к продаже. */
+export type Mode = "short" | "long" | "sale";
+
+export const modeLabel: Record<Mode, string> = {
+  short: "Посуточно",
+  long: "Помесячно",
+  sale: "Продажа",
+};
+
+export const modesOf = (v: Villa): Mode[] =>
+  (["short", "long", "sale"] as Mode[]).filter((m) => Boolean(v.offers[m]));
+
+export const isRentable = (v: Villa) => Boolean(v.offers.short || v.offers.long);
 
 export const ownershipLabel: Record<Villa["ownership"], string> = {
   freehold: "Freehold",
@@ -457,16 +548,50 @@ export const statusLabel: Record<Villa["status"], string> = {
 };
 
 export const jobLabel: Record<Villa["fitsJobs"][number], string> = {
+  holiday: "Отпуск на вилле",
   relocate: "Переезд с семьёй",
   invest: "Доходная аренда",
   "second-home": "Второй дом",
   "try-first": "Сезон перед покупкой",
 };
 
-export function formatPrice(villa: Villa): string {
-  const n = villa.priceUSD;
-  if (villa.pricePeriod === "month") {
-    return `$${n.toLocaleString("en-US")} / мес`;
+const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
+
+/** Цена в одном конкретном режиме. */
+export function priceIn(v: Villa, mode: Mode): string | null {
+  if (mode === "short" && v.offers.short) return `${usd(v.offers.short.nightlyUSD)} / ночь`;
+  if (mode === "long" && v.offers.long) return `${usd(v.offers.long.monthlyLowUSD)} / мес`;
+  if (mode === "sale" && v.offers.sale) {
+    const m = v.offers.sale.priceUSD / 1_000_000;
+    return `$${m.toFixed(2).replace(/\.?0+$/, "")}M`;
   }
-  return `$${(n / 1_000_000).toFixed(2).replace(/\.?0+$/, "")}M`;
+  return null;
+}
+
+/**
+ * Что показать на карточке. Аренда первична, поэтому если объект и сдаётся,
+ * и продаётся — в глаза бросается ставка аренды, а цена продажи идёт вторым.
+ */
+export function headlinePrice(v: Villa): { main: string; note?: string } {
+  if (v.offers.short) {
+    return {
+      main: `${usd(v.offers.short.nightlyUSD)} / ночь`,
+      note: v.offers.long ? `от ${usd(v.offers.long.monthlyLowUSD)} в месяц` : undefined,
+    };
+  }
+  if (v.offers.long) {
+    return {
+      main: `${usd(v.offers.long.monthlyLowUSD)} / мес`,
+      note: `в хай-сизон ${usd(v.offers.long.monthlyHighUSD)}`,
+    };
+  }
+  const sale = priceIn(v, "sale");
+  return { main: sale ?? "—", note: "продажа" };
+}
+
+/** Минимальная цена в режиме — для фильтра по бюджету. */
+export function priceValue(v: Villa, mode: Mode): number | null {
+  if (mode === "short") return v.offers.short?.nightlyUSD ?? null;
+  if (mode === "long") return v.offers.long?.monthlyLowUSD ?? null;
+  return v.offers.sale?.priceUSD ?? null;
 }

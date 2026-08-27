@@ -6,10 +6,14 @@ import { VillaCard } from "@/components/VillaCard";
 import { Button, Caution, Eyebrow, SampleTag } from "@/components/ui";
 import { clusterSlugByName, getCluster } from "@/data/clusters";
 import {
-  formatPrice,
   getVilla,
+  headlinePrice,
+  isRentable,
   jobLabel,
+  modeLabel,
+  modesOf,
   ownershipLabel,
+  priceIn,
   statusLabel,
   villas,
 } from "@/data/villas";
@@ -27,7 +31,7 @@ export async function generateMetadata({
   const villa = getVilla(id);
   if (!villa) return { title: "Объект не найден" };
   return {
-    title: `${villa.title}, ${villa.cluster} — ${formatPrice(villa)}`,
+    title: `${villa.title}, ${villa.cluster} — ${headlinePrice(villa).main}`,
     description: villa.summary,
   };
 }
@@ -68,7 +72,10 @@ export default async function VillaPage({ params }: { params: Promise<{ id: stri
 
   const clusterSlug = clusterSlugByName[villa.cluster];
   const cluster = clusterSlug ? getCluster(clusterSlug) : undefined;
-  const similar = villas.filter((v) => v.id !== villa.id && v.dealType === villa.dealType).slice(0, 3);
+  // Похожие — по совпадению режима: гостю нужна аренда, покупателю продажа
+  const similar = villas
+    .filter((v) => v.id !== villa.id && modesOf(v).some((m) => Boolean(villa.offers[m])))
+    .slice(0, 3);
 
   return (
     <>
@@ -99,9 +106,14 @@ export default async function VillaPage({ params }: { params: Promise<{ id: stri
               {villa.title}
             </h1>
             <div className="mt-5 flex flex-wrap gap-2">
-              <span className="eyebrow border border-rule px-3 py-1.5 text-ink-soft">
-                {villa.dealType === "sale" ? "Продажа" : "Длительная аренда"}
-              </span>
+              {modesOf(villa).map((m) => (
+                <span
+                  key={m}
+                  className="eyebrow border border-rule px-3 py-1.5 text-ink-soft"
+                >
+                  {modeLabel[m]}
+                </span>
+              ))}
               <span className="eyebrow border border-rule px-3 py-1.5 text-ink-soft">
                 {statusLabel[villa.status]} · {villa.year}
               </span>
@@ -117,12 +129,21 @@ export default async function VillaPage({ params }: { params: Promise<{ id: stri
           </div>
 
           <div className="lg:col-span-4 lg:text-right">
-            <p className="font-[family-name:var(--font-display)] text-4xl sm:text-5xl">
-              {formatPrice(villa)}
-            </p>
-            {villa.pricePeriod === "month" && (
-              <p className="mt-1.5 text-sm text-ink-muted">
-                ставка хай-сизона, май–октябрь ниже
+            {/* Все режимы сразу: гость и покупатель смотрят на разные строки */}
+            <dl className="space-y-2">
+              {modesOf(villa).map((m) => (
+                <div key={m} className="flex items-baseline gap-3 lg:justify-end">
+                  <dt className="eyebrow text-ink-muted">{modeLabel[m]}</dt>
+                  <dd className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl">
+                    {priceIn(villa, m)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {villa.offers.long && (
+              <p className="mt-2 text-sm text-ink-muted">
+                ставка лоу-сизона; в ноябре–апреле $
+                {villa.offers.long.monthlyHighUSD.toLocaleString("en-US")}
               </p>
             )}
           </div>
@@ -313,7 +334,7 @@ export default async function VillaPage({ params }: { params: Promise<{ id: stri
             </section>
 
             {/* Экономика владения */}
-            {villa.dealType === "sale" && (
+            {villa.offers.sale && (
               <section className="mt-14">
                 <Eyebrow>Экономика владения</Eyebrow>
                 <h2 className="mt-4 text-[1.75rem] sm:text-4xl leading-tight max-w-[22ch]">
@@ -437,7 +458,7 @@ export default async function VillaPage({ params }: { params: Promise<{ id: stri
       <div className="mx-auto max-w-[86rem] px-5 sm:px-8 mt-20 sm:mt-28">
         <Eyebrow>Ещё в этом формате</Eyebrow>
         <h2 className="mt-4 text-[1.75rem] sm:text-4xl leading-tight">
-          {villa.dealType === "sale" ? "Другие объекты в продаже" : "Другие дома в аренду"}
+          {isRentable(villa) ? "Другие дома в аренду" : "Другие объекты в продаже"}
         </h2>
         <div className="mt-10 grid gap-10 sm:gap-x-8 sm:gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
           {similar.map((v) => (

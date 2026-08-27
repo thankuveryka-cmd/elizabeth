@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Photo } from "@/components/Photo";
 import { VillaCard } from "@/components/VillaCard";
 import { Button, Caution, Eyebrow, Metric, Section } from "@/components/ui";
-import { villas } from "@/data/villas";
+import { isRentable, villas } from "@/data/villas";
 
 export const metadata: Metadata = {
   title: "Аренда → покупка: зачем сначала прожить сезон",
@@ -34,7 +34,7 @@ const STEPS = [
 ];
 
 export default function RentToBuyPage() {
-  const rentals = villas.filter((v) => v.dealType === "rent");
+  const rentals = villas.filter(isRentable);
 
   return (
     <>

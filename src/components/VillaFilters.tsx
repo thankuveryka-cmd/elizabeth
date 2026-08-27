@@ -4,25 +4,34 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { VillaCard } from "./VillaCard";
 import { Button } from "./ui";
-import { jobLabel, villas, type Villa } from "@/data/villas";
+import { jobLabel, priceValue, villas, type Mode, type Villa } from "@/data/villas";
 import { clusters } from "@/data/clusters";
 
 /** Бюджетные полосы разные для продажи и аренды — иначе фильтр врёт. */
-const SALE_BUDGETS = [
-  { key: "lt12", label: "до $1.2M", test: (p: number) => p < 1_200_000 },
-  { key: "12-16", label: "$1.2–1.6M", test: (p: number) => p >= 1_200_000 && p < 1_600_000 },
-  { key: "gt16", label: "от $1.6M", test: (p: number) => p >= 1_600_000 },
-];
+/* Полосы бюджета свои для каждого режима — иначе фильтр врёт. */
+const BUDGETS: Record<Mode, { key: string; label: string; test: (p: number) => boolean }[]> = {
+  short: [
+    { key: "n-lt800", label: "до $800 / ночь", test: (p) => p < 800 },
+    { key: "n-800-1200", label: "$800–1200", test: (p) => p >= 800 && p < 1_200 },
+    { key: "n-gt1200", label: "от $1200", test: (p) => p >= 1_200 },
+  ],
+  long: [
+    { key: "lt7", label: "до $7k / мес", test: (p) => p < 7_000 },
+    { key: "7-10", label: "$7–10k / мес", test: (p) => p >= 7_000 && p < 10_000 },
+    { key: "gt10", label: "от $10k / мес", test: (p) => p >= 10_000 },
+  ],
+  sale: [
+    { key: "lt12", label: "до $1.2M", test: (p) => p < 1_200_000 },
+    { key: "12-16", label: "$1.2–1.6M", test: (p) => p >= 1_200_000 && p < 1_600_000 },
+    { key: "gt16", label: "от $1.6M", test: (p) => p >= 1_600_000 },
+  ],
+};
 
-const RENT_BUDGETS = [
-  { key: "lt7", label: "до $7k / мес", test: (p: number) => p < 7_000 },
-  { key: "7-10", label: "$7–10k / мес", test: (p: number) => p >= 7_000 && p < 10_000 },
-  { key: "gt10", label: "от $10k / мес", test: (p: number) => p >= 10_000 },
-];
-
-const DEALS = [
+/* Аренда первична, поэтому идёт первой и в этом же порядке показывается. */
+const DEALS: { key: Mode; label: string }[] = [
+  { key: "long", label: "Помесячно" },
+  { key: "short", label: "Посуточно" },
   { key: "sale", label: "Продажа" },
-  { key: "rent", label: "Аренда" },
 ];
 
 const STATUSES = [
@@ -91,7 +100,9 @@ export function VillaFilters() {
   const status = params.get("status") ?? "";
   const job = params.get("job") ?? "";
 
-  const budgets = deal === "rent" ? RENT_BUDGETS : SALE_BUDGETS;
+  // Без выбранного режима бюджет неоднозначен, поэтому по умолчанию помесячно
+  const mode: Mode = (deal as Mode) || "long";
+  const budgets = BUDGETS[mode];
 
   /** Состояние фильтров живёт в URL: ссылку можно переслать, «назад» работает. */
   const setParam = useCallback(
@@ -111,18 +122,19 @@ export function VillaFilters() {
 
   const results = useMemo(() => {
     return villas.filter((v) => {
-      if (deal && v.dealType !== deal) return false;
+      if (deal && !v.offers[deal as Mode]) return false;
       if (cluster && v.cluster !== cluster) return false;
       if (status && v.status !== status) return false;
       if (beds && v.bedrooms < Number(beds)) return false;
       if (job && !v.fitsJobs.includes(job as Villa["fitsJobs"][number])) return false;
       if (budget) {
-        const band = [...SALE_BUDGETS, ...RENT_BUDGETS].find((b) => b.key === budget);
-        if (band && !band.test(v.priceUSD)) return false;
+        const band = Object.values(BUDGETS).flat().find((b) => b.key === budget);
+        const value = priceValue(v, mode);
+        if (band && (value === null || !band.test(value))) return false;
       }
       return true;
     });
-  }, [deal, cluster, status, beds, job, budget]);
+  }, [deal, cluster, status, beds, job, budget, mode]);
 
   const activeCount = [deal, cluster, budget, beds, status, job].filter(Boolean).length;
 
@@ -166,7 +178,11 @@ export function VillaFilters() {
               ))}
             </FilterGroup>
 
-            <FilterGroup label={deal === "rent" ? "Ставка в месяц" : "Бюджет"}>
+            <FilterGroup
+              label={
+                mode === "short" ? "Ставка за ночь" : mode === "long" ? "Ставка в месяц" : "Бюджет"
+              }
+            >
               {budgets.map((b) => (
                 <Chip
                   key={b.key}
