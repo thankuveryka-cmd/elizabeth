@@ -1,0 +1,70 @@
+# Собирает сайт и публикует на GitHub Pages.
+# Запускается при каждом пуше в рабочую ветку и вручную кнопкой Run workflow.
+#
+# Один раз перед первым запуском: Settings -> Pages -> Source -> GitHub Actions.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [claude/phuket-villas-catalog-site-xa66z9]
+  workflow_dispatch:
+
+# Разрешения, которые нужны экшену публикации
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Параллельные деплои не нужны: если пушнули дважды, публикуем последний
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Собрать статику
+        env:
+          STATIC_EXPORT: "true"
+          NEXT_PUBLIC_BASE_PATH: /elizabeth
+        run: npm run build
+
+      # Шрифты подключены в CSS как /fonts/..., а на project-странице сайт живёт
+      # в подпапке /elizabeth. Ищем по всему out/, потому что Next меняет
+      # расположение собранного CSS между версиями.
+      - name: Поправить пути к шрифтам под подпапку
+        run: |
+          find out -name '*.css' -print0 \
+            | xargs -0 --no-run-if-empty sed -i 's|url(/fonts/|url(/elizabeth/fonts/|g'
+          if grep -rq 'url(/fonts/' out; then
+            echo "Остались непереписанные пути к шрифтам"; exit 1
+          fi
+          grep -rq 'url(/elizabeth/fonts/' out \
+            || { echo "Префикс к шрифтам не проставился"; exit 1; }
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

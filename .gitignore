@@ -9,3 +9,6 @@ next-env.d.ts
 # Python bytecode from the ui-ux-pro-max skill scripts
 __pycache__/
 *.pyc
+
+# Статический экспорт для GitHub Pages
+out/
