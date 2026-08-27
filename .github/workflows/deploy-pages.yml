@@ -53,7 +53,12 @@ jobs:
           grep -rq 'url(/elizabeth/fonts/' out \
             || { echo "Префикс к шрифтам не проставился"; exit 1; }
 
+      # enablement: true просит экшен включить Pages самому, если в настройках
+      # репозитория это ещё не сделано. Если прав не хватит, останется ручной
+      # путь: Settings -> Pages -> Source -> GitHub Actions.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
