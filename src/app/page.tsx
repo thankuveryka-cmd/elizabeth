@@ -66,72 +66,56 @@ export default function HomePage() {
       <BrandIntro />
 
       {/* ================= HERO ================= */}
-      {/* Отрицательный отступ подтягивает герой под прозрачную шапку:
-          она sticky, то есть занимает место в потоке, и без этого стояла бы
-          на кремовом фоне вместо фотографии. */}
-      <section className="relative -mt-16 sm:-mt-20 bg-olive-900 text-cream-100 overflow-hidden">
+      {/* Отрицательный отступ подтягивает первый экран под шапку: она sticky,
+          то есть занимает место в потоке, и без этого фото начиналось бы под ней. */}
+      <section className="relative -mt-14 sm:-mt-16 min-h-[100svh] flex flex-col bg-olive-900 text-cream-100 overflow-hidden">
         <div className="absolute inset-0" aria-hidden="true">
-          <Photo
-            name="hero"
-            caption=""
-            aspect="auto"
-            className="h-full w-full opacity-45 slow-pan"
-          />
+          <Photo name="hero" caption="" aspect="auto" className="h-full w-full opacity-50 slow-pan" />
         </div>
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-olive-900 via-olive-900/70 to-olive-900/45"
+          className="absolute inset-0 bg-gradient-to-b from-olive-900/85 via-olive-900/55 to-olive-900/95"
         />
 
-        <div className="relative mx-auto max-w-[86rem] px-5 sm:px-8 pt-28 pb-16 sm:pt-36 sm:pb-24">
-          {/* Крупный знак бренда: на скролле уезжает и передаёт себя шапке */}
+        <div className="relative flex-1 flex flex-col items-center justify-center px-5 pt-24 pb-14 sm:pt-28">
           <HeroLockup />
 
-          <div className="mt-14 sm:mt-20 max-w-[46rem]">
-            <ScrollReveal>
-              <Eyebrow tone="light">Пхукет · $1–2M · продажа и длительная аренда</Eyebrow>
-            </ScrollReveal>
-
-            <ScrollReveal delay={90}>
-              <h1 className="mt-6 text-[2.5rem] leading-[1.03] sm:text-6xl lg:text-[4.5rem] max-w-[19ch]">
-                Дом здесь выбирают глазами.
-                <span className="block accent text-gold-400 text-[2.75rem] sm:text-[4rem] lg:text-[5rem] leading-[1.05] mt-2">
-                  Проигрывают — на документах
-                </span>
-              </h1>
-            </ScrollReveal>
-
-            <ScrollReveal delay={180}>
-              <p className="mt-7 max-w-[54ch] text-[1.0625rem] sm:text-lg leading-relaxed text-cream-200/85">
-                Иностранец не может владеть землёй в Таиланде. Всё остальное — это выбор
-                структуры сделки, и именно там теряют деньги, а не на цене за метр. Мы начинаем
-                работу с проверки структуры, а показываем объект вторым шагом.
-              </p>
-            </ScrollReveal>
-
-            <ScrollReveal delay={260}>
-              <div className="mt-9 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Button href="#paths" variant="light">
-                  С чего начать — три сценария
-                </Button>
-                <Button href="/villas" variant="ghost">
-                  Смотреть каталог
-                </Button>
-              </div>
-            </ScrollReveal>
-          </div>
+          <ScrollReveal delay={500} className="mt-10 sm:mt-12 text-center">
+            <p className="mx-auto max-w-[30ch] text-[1.0625rem] sm:text-xl leading-snug text-cream-200/90">
+              Виллы $1–2M. Проверка структуры сделки — до просмотра, а не после задатка.
+            </p>
+            <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button href="/villas" variant="ghost">
+                Смотреть каталог
+              </Button>
+              <Button href="#paths" variant="ghost">
+                С чего начать
+              </Button>
+            </div>
+          </ScrollReveal>
         </div>
 
-        {/* Доверие видно сразу, а не на странице «О нас» */}
-        <div className="relative border-t border-cream-200/12">
-          <div className="mx-auto max-w-[86rem] px-5 sm:px-8 py-10 sm:py-12">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-9 lg:grid-cols-4">
-              {metrics.map((m, i) => (
-                <ScrollReveal key={m.label} delay={i * 80}>
-                  <Metric {...m} tone="light" />
-                </ScrollReveal>
-              ))}
-            </div>
+        {/* Стрелка вниз: обещает, что под первым экраном что-то есть */}
+        <a
+          href="#paths"
+          className="relative z-10 mx-auto mb-8 flex h-11 w-11 items-center justify-center text-cream-200/60 hover:text-gold-400 transition-colors duration-200"
+          aria-label="К содержанию страницы"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5 hero-chevron" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
+            <path d="M5 9l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </a>
+      </section>
+
+      {/* ================= ДОВЕРИЕ ================= */}
+      <section className="bg-olive-800 text-cream-100">
+        <div className="mx-auto max-w-[110rem] px-5 sm:px-8 py-12 sm:py-16">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
+            {metrics.map((m, i) => (
+              <ScrollReveal key={m.label} delay={i * 80}>
+                <Metric {...m} tone="light" />
+              </ScrollReveal>
+            ))}
           </div>
         </div>
       </section>

@@ -1,15 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { LogoMark } from "./Logo";
+import { clusters } from "@/data/clusters";
 
 /**
- * Крупный знак бренда в первом экране. При скролле уезжает вверх, уменьшается
- * и гаснет — а навстречу ему в шапке проявляется компактная версия
- * (см. SiteHeader, событие eliz:herologo).
+ * Первый экран: знак и имя бренда поверх фотографии на всю высоту.
+ * При скролле лок-ап уменьшается, уезжает вверх и гаснет — а в шапке
+ * навстречу проявляется компактная версия (событие eliz:herologo).
  *
- * Считаем всё в rAF и двигаем только transform и opacity: никаких layout-свойств,
- * иначе на телефоне это будет заметно дёргаться.
+ * Двигаем только transform и opacity, всё считаем в rAF: иначе на телефоне
+ * это будет заметно дёргаться.
  */
 export function HeroLockup() {
   const ref = useRef<HTMLDivElement>(null);
@@ -18,33 +20,29 @@ export function HeroLockup() {
     const el = ref.current;
     if (!el) return;
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      // Без движения: логотип в шапке просто есть с самого начала
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       window.dispatchEvent(new CustomEvent("eliz:herologo", { detail: { visible: false } }));
       return;
     }
 
     let frame = 0;
-    let lastHandedOver: boolean | null = null;
+    let handedOver: boolean | null = null;
 
     const update = () => {
       frame = 0;
-      // Путь, за который лок-ап полностью уходит
-      const distance = Math.max(240, window.innerHeight * 0.45);
+      const distance = Math.max(240, window.innerHeight * 0.5);
       const p = Math.min(1, Math.max(0, window.scrollY / distance));
 
-      el.style.transform = `translate3d(0, ${(-p * 56).toFixed(2)}px, 0) scale(${(
-        1 - p * 0.22
+      el.style.transform = `translate3d(0, ${(-p * 70).toFixed(2)}px, 0) scale(${(
+        1 - p * 0.25
       ).toFixed(4)})`;
-      el.style.opacity = String(Math.max(0, 1 - p * 1.25));
+      el.style.opacity = String(Math.max(0, 1 - p * 1.35));
 
-      // Передаём эстафету шапке чуть раньше, чем лок-ап погаснет целиком
-      const heroLogoVisible = p < 0.7;
-      if (heroLogoVisible !== lastHandedOver) {
-        lastHandedOver = heroLogoVisible;
+      const heroVisible = p < 0.65;
+      if (heroVisible !== handedOver) {
+        handedOver = heroVisible;
         window.dispatchEvent(
-          new CustomEvent("eliz:herologo", { detail: { visible: heroLogoVisible } }),
+          new CustomEvent("eliz:herologo", { detail: { visible: heroVisible } }),
         );
       }
     };
@@ -60,18 +58,39 @@ export function HeroLockup() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);
-      // Уходим со страницы — возвращаем шапке её логотип
       window.dispatchEvent(new CustomEvent("eliz:herologo", { detail: { visible: false } }));
     };
   }, []);
 
   return (
+    /* Два слоя намеренно: анимация появления с fill-mode заканчивается
+       значением transform: none и перебивала бы inline-стиль от скролла —
+       у анимаций приоритет выше. Снаружи скролл, внутри появление. */
     <div ref={ref} className="hero-lockup will-change-transform">
-      <LogoMark className="mx-auto h-20 w-24 sm:h-28 sm:w-32 text-cream-200/90" />
+      <div className="hero-lockup-in">
+      <LogoMark className="mx-auto h-16 w-20 sm:h-24 sm:w-28 text-cream-200/85" />
+
       <p className="hero-word font-[family-name:var(--font-display)] text-cream-100">
         ELIZABETH
       </p>
-      <p className="script text-gold-400 text-lg sm:text-2xl mt-1">Luxury Villa Collection</p>
+
+      {/* Ряд кластеров — как список регионов в референсе: сразу говорит,
+          где мы работаем, и уводит вглубь сайта с первого экрана */}
+      <nav
+        aria-label="Гео-кластеры"
+        className="mt-6 sm:mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5 px-4"
+      >
+        {clusters.slice(0, 5).map((c) => (
+          <Link
+            key={c.slug}
+            href={`/areas/${c.slug}`}
+            className="eyebrow text-cream-200/80 hover:text-gold-400 transition-colors duration-200"
+          >
+            {c.name}
+          </Link>
+        ))}
+      </nav>
+      </div>
     </div>
   );
 }

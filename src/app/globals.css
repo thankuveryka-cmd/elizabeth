@@ -242,16 +242,30 @@
 .hero-lockup {
   text-align: center;
   transform-origin: 50% 0%;
-  /* Стартовое проявление; дальше значения перебивает скролл-обработчик */
+}
+
+/* Появление живёт на внутреннем слое: снаружи inline-стиль от скролла */
+.hero-lockup-in {
   animation: intro-rise 1s var(--ease-quiet) 0.15s both;
 }
 
 .hero-word {
-  margin-top: 1rem;
-  font-size: clamp(2.25rem, 9vw, 5.5rem);
-  letter-spacing: 0.3em;
-  text-indent: 0.3em;
-  line-height: 1;
+  margin-top: 1.25rem;
+  font-size: clamp(2.5rem, 11vw, 8rem);
+  letter-spacing: 0.28em;
+  /* Разрядка добавляет пустоту справа — компенсируем, иначе не по центру */
+  text-indent: 0.28em;
+  line-height: 0.95;
+}
+
+/* Стрелка вниз: короткий намёк на прокрутку, не бесконечная пульсация */
+.hero-chevron {
+  animation: chevron-nudge 2.6s var(--ease-quiet) infinite;
+}
+
+@keyframes chevron-nudge {
+  0%, 72%, 100% { transform: translateY(0); }
+  82%           { transform: translateY(4px); }
 }
 
 /* --- Логотип, въезжающий в шапку -------------------------------------- */
@@ -300,6 +314,7 @@
 @media (prefers-reduced-motion: reduce) {
   .intro-veil { display: none; }
   .hero-lockup,
+  .hero-lockup-in,
   .intro-mark,
   .intro-word,
   .intro-tag {
@@ -318,4 +333,5 @@
     pointer-events: auto;
   }
   .slow-pan { animation: none; }
+  .hero-chevron { animation: none; }
 }
