@@ -196,49 +196,20 @@
   opacity: 0.9;
 }
 
-.intro-lockup {
-  text-align: center;
-  padding: 2rem;
-}
-
-.intro-mark,
-.intro-word,
-.intro-tag {
+.intro-veil.is-out .intro-mark {
   opacity: 0;
-  transform: translate3d(0, 14px, 0);
+  transition: opacity 0.3s var(--ease-quiet);
 }
 
-.intro-veil.is-in .intro-mark,
-.intro-veil.is-in .intro-word,
-.intro-veil.is-in .intro-tag,
-.intro-veil.is-out .intro-mark,
-.intro-veil.is-out .intro-word,
-.intro-veil.is-out .intro-tag {
-  animation: intro-rise 0.9s var(--ease-quiet) forwards;
+/* Деревце на заставке: проявляется и мягко дышит, пока идёт загрузка */
+.intro-mark {
+  opacity: 0;
+  animation: intro-mark-in 0.7s var(--ease-quiet) 0.1s forwards;
 }
 
-.intro-veil.is-in .intro-mark { animation-delay: 0.05s; }
-.intro-veil.is-in .intro-word { animation-delay: 0.22s; }
-.intro-veil.is-in .intro-tag  { animation-delay: 0.38s; }
-
-.intro-word {
-  font-family: var(--font-wordmark);
-  text-transform: uppercase;
-  margin-top: 1.25rem;
-  font-size: clamp(2rem, 7vw, 4rem);
-  letter-spacing: 0.34em;
-  /* Разрядка добавляет пустоту справа — компенсируем, иначе не по центру */
-  text-indent: 0.34em;
-  line-height: 1;
-}
-
-.intro-tag {
-  margin-top: 0.5rem;
-  font-size: clamp(1rem, 2.4vw, 1.5rem);
-}
-
-@keyframes intro-rise {
-  to { opacity: 1; transform: none; }
+@keyframes intro-mark-in {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.96); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* --- Лок-ап в первом экране ------------------------------------------ */
@@ -334,9 +305,7 @@
   .intro-veil { display: none; }
   .hero-lockup,
   .hero-lockup-in,
-  .intro-mark,
-  .intro-word,
-  .intro-tag {
+  .intro-mark {
     animation: none;
     opacity: 1;
     transform: none;

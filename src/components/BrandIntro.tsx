@@ -4,15 +4,22 @@ import { useEffect, useState } from "react";
 import { TreeMark } from "./TreeMark";
 
 /**
- * Заставка при первом заходе: знак и имя бренда на оливковом поле,
- * которое затем уходит вверх и открывает главную.
+ * Заставка при первом заходе: только знак-деревце на оливковом поле.
  *
- * Правила, без которых заставка превращается в раздражитель:
- *  - показывается один раз за сессию, а не на каждом переходе;
- *  - выключается при prefers-reduced-motion;
- *  - не блокирует контент: он уже отрисован под ней, заставка только сверху;
- *  - целиком уходит за 1.6 секунды.
+ * Почему без надписи: имя бренда стоит крупно в первом экране сразу под
+ * заставкой — на заставке оно читалось как дубль. Плюс шрифт имени
+ * подгружается, и на заставке было видно, как подменяется начертание.
+ *
+ * Заставка держится, пока не выполнится всё сразу:
+ *  - прошло минимум времени, чтобы она не мигнула;
+ *  - шрифты загружены (иначе текст под ней подменится на глазах);
+ *  - страница догрузилась.
+ * И в любом случае уходит по предельному сроку, чтобы не запереть сайт.
  */
+
+const MIN_MS = 900;
+const MAX_MS = 4000;
+
 export function BrandIntro() {
   const [phase, setPhase] = useState<"hidden" | "in" | "out" | "done">("hidden");
 
@@ -37,15 +44,40 @@ export function BrandIntro() {
     document.body.style.overflow = "hidden";
     setPhase("in");
 
-    const toOut = setTimeout(() => setPhase("out"), 1100);
-    const toDone = setTimeout(() => {
-      setPhase("done");
-      document.body.style.overflow = "";
-    }, 1900);
+    let closed = false;
+    const timers: number[] = [];
+
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      setPhase("out");
+      timers.push(
+        window.setTimeout(() => {
+          setPhase("done");
+          document.body.style.overflow = "";
+        }, 700),
+      );
+    };
+
+    const started = performance.now();
+    const waitReady = Promise.all([
+      // Шрифты: без этого имя бренда подменяется уже после снятия заставки
+      document.fonts?.ready ?? Promise.resolve(),
+      document.readyState === "complete"
+        ? Promise.resolve()
+        : new Promise<void>((r) => window.addEventListener("load", () => r(), { once: true })),
+    ]);
+
+    waitReady.then(() => {
+      const left = Math.max(0, MIN_MS - (performance.now() - started));
+      timers.push(window.setTimeout(close, left));
+    });
+
+    // Предохранитель: что бы ни случилось, сайт открывается
+    timers.push(window.setTimeout(close, MAX_MS));
 
     return () => {
-      clearTimeout(toOut);
-      clearTimeout(toDone);
+      timers.forEach(clearTimeout);
       document.body.style.overflow = "";
     };
   }, []);
@@ -59,13 +91,7 @@ export function BrandIntro() {
         phase === "out" ? "is-out" : ""
       }`}
     >
-      <div className="intro-lockup">
-        <TreeMark className="intro-mark h-16 w-[7.3rem] sm:h-24 sm:w-[11rem] text-cream-200" />
-        <p className="intro-word font-[family-name:var(--font-display)] text-cream-100">
-          ELIZABETH
-        </p>
-        <p className="intro-tag script text-gold-400">Luxury Villa Collection</p>
-      </div>
+      <TreeMark className="intro-mark h-14 w-[6.4rem] sm:h-20 sm:w-[9.1rem] text-cream-200" />
     </div>
   );
 }

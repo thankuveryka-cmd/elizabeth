@@ -19,23 +19,33 @@ export const metadata: Metadata = {
   },
 };
 
+/** Подпапка, в которой живёт сайт. Пусто локально, /elizabeth на Pages. */
+const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
       <head>
-        {/* Фон первого экрана объявлен в CSS, браузер узнаёт о нём поздно —
-            подсказываем заранее, иначе первый экран заметно «доезжает» */}
+        {/* Файлы в public отдаются с учётом подпапки, в которой живёт сайт.
+            На GitHub Pages это /elizabeth, локально — пусто. */}
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          href={`${base}/fonts/henri-didot-caps.woff2`}
+          crossOrigin=""
+        />
         <link
           rel="preload"
           as="image"
-          href="/photos/hero.webp"
+          href={`${base}/photos/hero.webp`}
           type="image/webp"
           media="(min-width: 641px)"
         />
         <link
           rel="preload"
           as="image"
-          href="/photos/hero-sm.webp"
+          href={`${base}/photos/hero-sm.webp`}
           type="image/webp"
           media="(max-width: 640px)"
         />

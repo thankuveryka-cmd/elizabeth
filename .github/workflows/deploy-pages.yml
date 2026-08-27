@@ -40,22 +40,32 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: /elizabeth
         run: npm run build
 
-      # Шрифты подключены в CSS как /fonts/..., а на project-странице сайт живёт
-      # в подпапке /elizabeth. Ищем по всему out/, потому что Next меняет
-      # расположение собранного CSS между версиями.
-      - name: Поправить пути к шрифтам под подпапку
+      # Ссылки на файлы прописаны от корня (/fonts/..., /photos/...), а на
+      # project-странице сайт живёт в подпапке /elizabeth.
+      #
+      # Ловушка: минификатор CSS переписывает image-set(url("/photos/x.webp"))
+      # в image-set("/photos/x.webp" 1x) — без обёртки url(). Поэтому ищем не
+      # по url(, а по любому символу кавычки или скобки перед путём.
+      - name: Поправить пути к файлам под подпапку
         run: |
-          find out -name '*.css' -print0 \
-            | xargs -0 --no-run-if-empty sed -i 's|url(/fonts/|url(/elizabeth/fonts/|g'
-          if grep -rq 'url(/fonts/' out; then
-            echo "Остались непереписанные пути к шрифтам"; exit 1
-          fi
-          grep -rq 'url(/elizabeth/fonts/' out \
-            || { echo "Префикс к шрифтам не проставился"; exit 1; }
+          set -e
+          find out \( -name '*.css' -o -name '*.html' -o -name '*.js' \) -print0 \
+            | xargs -0 --no-run-if-empty sed -i -E 's#(["'"'"'(=])/(fonts|photos)/#\1/elizabeth/\2/#g'
 
-      # enablement: true просит экшен включить Pages самому, если в настройках
-      # репозитория это ещё не сделано. Если прав не хватит, останется ручной
-      # путь: Settings -> Pages -> Source -> GitHub Actions.
+          echo "--- проверка ---"
+          if grep -rqE '["'"'"'(=]/(fonts|photos)/' out; then
+            echo "Остались ссылки без префикса:"
+            grep -rhoE '.{20}["'"'"'(=]/(fonts|photos)/[^"'"'"')]*' out | head -5
+            exit 1
+          fi
+          echo "все ссылки получили префикс /elizabeth"
+
+          # Файлы должны реально лежать там, куда теперь ведут ссылки
+          for f in $(grep -rhoE '/elizabeth/(fonts|photos)/[A-Za-z0-9._-]+' out | sort -u); do
+            test -f "out${f#/elizabeth}" || { echo "НЕТ ФАЙЛА: $f"; exit 1; }
+          done
+          echo "все файлы на месте"
+
       - uses: actions/configure-pages@v5
         with:
           enablement: true
