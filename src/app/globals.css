@@ -169,3 +169,153 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ==========================================================================
+   Движение: заставка, лок-ап в герое, проявление блоков
+   Всё анимируем только через opacity и transform — остальное дёргает layout.
+   ========================================================================== */
+
+/* --- Заставка при первом заходе ------------------------------------- */
+
+.intro-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--color-olive-900);
+  transition:
+    transform 0.8s cubic-bezier(0.76, 0, 0.24, 1),
+    opacity 0.8s ease;
+}
+
+.intro-veil.is-out {
+  transform: translate3d(0, -100%, 0);
+  opacity: 0.9;
+}
+
+.intro-lockup {
+  text-align: center;
+  padding: 2rem;
+}
+
+.intro-mark,
+.intro-word,
+.intro-tag {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
+
+.intro-veil.is-in .intro-mark,
+.intro-veil.is-in .intro-word,
+.intro-veil.is-in .intro-tag,
+.intro-veil.is-out .intro-mark,
+.intro-veil.is-out .intro-word,
+.intro-veil.is-out .intro-tag {
+  animation: intro-rise 0.9s var(--ease-quiet) forwards;
+}
+
+.intro-veil.is-in .intro-mark { animation-delay: 0.05s; }
+.intro-veil.is-in .intro-word { animation-delay: 0.22s; }
+.intro-veil.is-in .intro-tag  { animation-delay: 0.38s; }
+
+.intro-word {
+  margin-top: 1.25rem;
+  font-size: clamp(2rem, 7vw, 4rem);
+  letter-spacing: 0.34em;
+  /* Разрядка добавляет пустоту справа — компенсируем, иначе не по центру */
+  text-indent: 0.34em;
+  line-height: 1;
+}
+
+.intro-tag {
+  margin-top: 0.5rem;
+  font-size: clamp(1rem, 2.4vw, 1.5rem);
+}
+
+@keyframes intro-rise {
+  to { opacity: 1; transform: none; }
+}
+
+/* --- Лок-ап в первом экране ------------------------------------------ */
+
+.hero-lockup {
+  text-align: center;
+  transform-origin: 50% 0%;
+  /* Стартовое проявление; дальше значения перебивает скролл-обработчик */
+  animation: intro-rise 1s var(--ease-quiet) 0.15s both;
+}
+
+.hero-word {
+  margin-top: 1rem;
+  font-size: clamp(2.25rem, 9vw, 5.5rem);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  line-height: 1;
+}
+
+/* --- Логотип, въезжающий в шапку -------------------------------------- */
+
+.header-logo {
+  opacity: 0;
+  transform: translate3d(0, -10px, 0);
+  pointer-events: none;
+  transition:
+    opacity 0.45s var(--ease-quiet),
+    transform 0.45s var(--ease-quiet);
+}
+
+.header-logo.is-in {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* --- Проявление блоков при скролле ------------------------------------ */
+
+.reveal-target {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition:
+    opacity 0.7s var(--ease-quiet),
+    transform 0.7s var(--ease-quiet);
+}
+
+.reveal-target.is-shown {
+  opacity: 1;
+  transform: none;
+}
+
+/* Медленный наезд на фото — фон живёт, но не отвлекает */
+@keyframes slow-pan {
+  from { transform: scale(1.06); }
+  to   { transform: scale(1); }
+}
+
+.slow-pan {
+  animation: slow-pan 14s var(--ease-quiet) both;
+}
+
+/* Системная настройка сильнее любой красоты */
+@media (prefers-reduced-motion: reduce) {
+  .intro-veil { display: none; }
+  .hero-lockup,
+  .intro-mark,
+  .intro-word,
+  .intro-tag {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .reveal-target {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .header-logo {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .slow-pan { animation: none; }
+}
