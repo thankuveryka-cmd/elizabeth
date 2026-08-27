@@ -22,6 +22,24 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
+      <head>
+        {/* Фон первого экрана объявлен в CSS, браузер узнаёт о нём поздно —
+            подсказываем заранее, иначе первый экран заметно «доезжает» */}
+        <link
+          rel="preload"
+          as="image"
+          href="/photos/hero.webp"
+          type="image/webp"
+          media="(min-width: 641px)"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/photos/hero-sm.webp"
+          type="image/webp"
+          media="(max-width: 640px)"
+        />
+      </head>
       <body>
         <a
           href="#main"

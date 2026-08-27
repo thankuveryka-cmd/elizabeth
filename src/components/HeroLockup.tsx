@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { LogoMark } from "./Logo";
 import { clusters } from "@/data/clusters";
 
 /**
@@ -68,8 +67,9 @@ export function HeroLockup() {
        у анимаций приоритет выше. Снаружи скролл, внутри появление. */
     <div ref={ref} className="hero-lockup will-change-transform">
       <div className="hero-lockup-in">
-      <LogoMark className="mx-auto h-16 w-20 sm:h-24 sm:w-28 text-cream-200/85" />
-
+      {/* Знака дерева здесь намеренно нет: фон — фотография того же дерева,
+          рисованный знак поверх неё читается как дубль. Знак остаётся
+          в шапке, подвале и заставке, где фотографии нет. */}
       <p className="hero-word font-[family-name:var(--font-display)] text-cream-100">
         ELIZABETH
       </p>
@@ -84,7 +84,7 @@ export function HeroLockup() {
           <Link
             key={c.slug}
             href={`/areas/${c.slug}`}
-            className="eyebrow text-cream-200/80 hover:text-gold-400 transition-colors duration-200"
+            className="hero-cluster eyebrow text-cream-100 hover:text-gold-400 transition-colors duration-200"
           >
             {c.name}
           </Link>

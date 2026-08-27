@@ -242,6 +242,9 @@
 .hero-lockup {
   text-align: center;
   transform-origin: 50% 0%;
+  /* Мягкая тень держит читаемость точечно, там где текст, а не по всему
+     кадру. Это позволяет не топить фотографию затемнением целиком. */
+  text-shadow: 0 2px 28px rgba(35, 43, 29, 0.75);
 }
 
 /* Появление живёт на внутреннем слое: снаружи inline-стиль от скролла */
@@ -251,11 +254,21 @@
 
 .hero-word {
   margin-top: 1.25rem;
-  font-size: clamp(2.5rem, 11vw, 8rem);
+  /* Разрядка 0.28em добавляет к строке почти треть ширины, поэтому на
+     узком экране кегль заметно меньше, иначе слово упирается в края */
+  font-size: clamp(1.75rem, 8.2vw, 8rem);
   letter-spacing: 0.28em;
   /* Разрядка добавляет пустоту справа — компенсируем, иначе не по центру */
   text-indent: 0.28em;
   line-height: 0.95;
+}
+
+/* Ряд кластеров лежит на самой пёстрой части кадра — мхе. Тени
+   от лок-апа ему не хватает, поэтому своя, плотнее и туже. */
+.hero-cluster {
+  text-shadow:
+    0 1px 3px rgba(35, 43, 29, 0.95),
+    0 2px 14px rgba(35, 43, 29, 0.85);
 }
 
 /* Стрелка вниз: короткий намёк на прокрутку, не бесконечная пульсация */
@@ -467,8 +480,11 @@ body.has-sticky-search { padding-bottom: 5.5rem; }
 .hero-photo {
   position: absolute;
   inset: 0;
+  /* jpg — запасной для браузеров без webp; image-set сам выберет формат */
   background-image: url("/photos/hero.jpg");
+  background-image: image-set(url("/photos/hero.webp") type("image/webp"), url("/photos/hero.jpg") type("image/jpeg"));
   background-size: cover;
+  /* Солнце за стволом примерно на 58% высоты — держим эту точку в кадре */
   background-position: center 58%;
   /* Медленный отъезд: фотография живёт, но движение не ловится взглядом */
   animation: hero-drift 26s var(--ease-quiet) both;
@@ -477,6 +493,14 @@ body.has-sticky-search { padding-bottom: 5.5rem; }
 @keyframes hero-drift {
   from { transform: scale(1.08); }
   to   { transform: scale(1); }
+}
+
+/* На узких экранах отдаём облегчённый файл: трафик мобильный */
+@media (max-width: 640px) {
+  .hero-photo {
+    background-image: url("/photos/hero-sm.webp");
+    background-image: image-set(url("/photos/hero-sm.webp") type("image/webp"));
+  }
 }
 
 /* Низкое солнце за стволом: тёплое пятно, которое медленно дышит */
@@ -531,10 +555,11 @@ body.has-sticky-search { padding-bottom: 5.5rem; }
   background:
     linear-gradient(
       to bottom,
-      rgba(35, 43, 29, 0.72) 0%,
-      rgba(35, 43, 29, 0.34) 34%,
-      rgba(35, 43, 29, 0.52) 68%,
-      rgba(35, 43, 29, 0.92) 100%
+      rgba(35, 43, 29, 0.78) 0%,
+      rgba(35, 43, 29, 0.30) 30%,
+      rgba(35, 43, 29, 0.22) 52%,
+      rgba(35, 43, 29, 0.55) 74%,
+      rgba(35, 43, 29, 0.94) 100%
     );
 }
 
