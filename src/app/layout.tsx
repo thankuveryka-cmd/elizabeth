@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { StickySearch } from "@/components/StickySearch";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://elizabeth-villas.example"),
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteHeader />
         <main id="main">{children}</main>
         <SiteFooter />
+        <StickySearch />
       </body>
     </html>
   );
