@@ -6,7 +6,6 @@ import { Photo } from "@/components/Photo";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { VillaCard } from "@/components/VillaCard";
 import { Button, Caution, Eyebrow, Metric, Section } from "@/components/ui";
-import { metrics } from "@/data/agency";
 import { clusters } from "@/data/clusters";
 import { villas } from "@/data/villas";
 
@@ -75,18 +74,10 @@ export default function HomePage() {
         <div className="relative flex-1 flex flex-col items-center justify-center px-5 pt-24 pb-14 sm:pt-28">
           <HeroLockup />
 
-          <ScrollReveal delay={500} className="mt-10 sm:mt-12 text-center">
-            <p className="mx-auto max-w-[30ch] text-[1.0625rem] sm:text-xl leading-snug text-cream-200/90">
-              Виллы $1–2M. Проверка структуры сделки — до просмотра, а не после задатка.
-            </p>
-            <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button href="/villas" variant="ghost">
-                Смотреть каталог
-              </Button>
-              <Button href="#paths" variant="ghost">
-                С чего начать
-              </Button>
-            </div>
+          <ScrollReveal delay={450} className="mt-10 sm:mt-12 text-center">
+            <Button href="/villas" variant="ghost">
+              Смотреть каталог
+            </Button>
           </ScrollReveal>
         </div>
 
@@ -100,19 +91,6 @@ export default function HomePage() {
             <path d="M5 9l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </a>
-      </section>
-
-      {/* ================= ДОВЕРИЕ ================= */}
-      <section className="bg-olive-800 text-cream-100">
-        <div className="mx-auto max-w-[110rem] px-5 sm:px-8 py-12 sm:py-16">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
-            {metrics.map((m, i) => (
-              <ScrollReveal key={m.label} delay={i * 80}>
-                <Metric {...m} tone="light" />
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* ================= ТРИ ПУТИ ================= */}

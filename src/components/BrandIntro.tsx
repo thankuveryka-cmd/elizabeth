@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LogoMark } from "./Logo";
+import { TreeMark } from "./TreeMark";
 
 /**
  * Заставка при первом заходе: знак и имя бренда на оливковом поле,
@@ -60,7 +60,7 @@ export function BrandIntro() {
       }`}
     >
       <div className="intro-lockup">
-        <LogoMark className="intro-mark h-24 w-28 text-cream-200" />
+        <TreeMark className="intro-mark h-16 w-[7.3rem] sm:h-24 sm:w-[11rem] text-cream-200" />
         <p className="intro-word font-[family-name:var(--font-display)] text-cream-100">
           ELIZABETH
         </p>

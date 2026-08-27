@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogoMark } from "./Logo";
+import { TreeMark } from "./TreeMark";
 import { contacts, legalDisclaimer } from "@/data/agency";
 import { clusters } from "@/data/clusters";
 
@@ -9,8 +9,8 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[86rem] px-5 sm:px-8 py-14 sm:py-20">
         <div className="grid gap-12 md:grid-cols-12">
           <div className="md:col-span-4">
-            <LogoMark className="h-12 w-14 text-cream-200/85" />
-            <p className="font-[family-name:var(--font-display)] text-xl tracking-[0.3em] uppercase mt-4">
+            <TreeMark className="h-10 w-[4.6rem] text-cream-200/85" />
+            <p className="font-[family-name:var(--font-wordmark)] text-2xl tracking-[0.24em] uppercase indent-[0.24em] mt-4">
               Elizabeth
             </p>
             <p className="script text-cream-300/75 text-sm">Luxury Villa Collection</p>
