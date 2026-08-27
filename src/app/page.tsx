@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandIntro } from "@/components/BrandIntro";
+import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { HeroLockup } from "@/components/HeroLockup";
 import { Photo } from "@/components/Photo";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -69,13 +70,7 @@ export default function HomePage() {
       {/* Отрицательный отступ подтягивает первый экран под шапку: она sticky,
           то есть занимает место в потоке, и без этого фото начиналось бы под ней. */}
       <section className="relative -mt-14 sm:-mt-16 min-h-[100svh] flex flex-col bg-olive-900 text-cream-100 overflow-hidden">
-        <div className="absolute inset-0" aria-hidden="true">
-          <Photo name="hero" caption="" aspect="auto" className="h-full w-full opacity-50 slow-pan" />
-        </div>
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-b from-olive-900/85 via-olive-900/55 to-olive-900/95"
-        />
+        <HeroBackdrop />
 
         <div className="relative flex-1 flex flex-col items-center justify-center px-5 pt-24 pb-14 sm:pt-28">
           <HeroLockup />

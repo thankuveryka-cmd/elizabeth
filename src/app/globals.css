@@ -439,3 +439,107 @@ body.has-sticky-search { padding-bottom: 5.5rem; }
 @media (prefers-reduced-motion: reduce) {
   .sticky-search { transition: opacity 0.2s linear, visibility 0s; transform: none; }
 }
+
+/* ==========================================================================
+   Фон первого экрана: фотография, солнце, туман
+   ========================================================================== */
+
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Заглушка на случай отсутствия фотографии */
+.hero-fallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, var(--color-olive-800), var(--color-forest-700) 55%, var(--color-olive-900));
+}
+
+/* Параллакс-слой: его двигает скролл */
+.hero-parallax {
+  position: absolute;
+  /* Запас снизу, чтобы при сдвиге не показалась граница */
+  inset: -8% 0 -20% 0;
+}
+
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  background-image: url("/photos/hero.jpg");
+  background-size: cover;
+  background-position: center 58%;
+  /* Медленный отъезд: фотография живёт, но движение не ловится взглядом */
+  animation: hero-drift 26s var(--ease-quiet) both;
+}
+
+@keyframes hero-drift {
+  from { transform: scale(1.08); }
+  to   { transform: scale(1); }
+}
+
+/* Низкое солнце за стволом: тёплое пятно, которое медленно дышит */
+.hero-sun {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: min(90vw, 900px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(
+    circle,
+    rgba(217, 185, 111, 0.38) 0%,
+    rgba(201, 162, 76, 0.16) 32%,
+    transparent 62%
+  );
+  mix-blend-mode: screen;
+  animation: sun-breathe 11s ease-in-out infinite alternate;
+}
+
+@keyframes sun-breathe {
+  from { opacity: 0.55; transform: scale(0.94); }
+  to   { opacity: 1;    transform: scale(1.06); }
+}
+
+/* Туман над травой: широкая мягкая полоса, уходящая вбок */
+.hero-mist {
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  bottom: 0;
+  height: 42%;
+  background: linear-gradient(
+    to top,
+    rgba(244, 241, 226, 0.16),
+    rgba(244, 241, 226, 0.06) 45%,
+    transparent
+  );
+  animation: mist-drift 52s linear infinite alternate;
+}
+
+@keyframes mist-drift {
+  from { transform: translate3d(-4%, 0, 0); }
+  to   { transform: translate3d(4%, 0, 0); }
+}
+
+/* Затемнение под текст. Светлое небо + кремовый текст = нечитаемо,
+   поэтому сверху и снизу уводим в оливу. */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(35, 43, 29, 0.72) 0%,
+      rgba(35, 43, 29, 0.34) 34%,
+      rgba(35, 43, 29, 0.52) 68%,
+      rgba(35, 43, 29, 0.92) 100%
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo { animation: none; transform: none; }
+  .hero-sun { animation: none; opacity: 0.8; }
+  .hero-mist { animation: none; }
+}
