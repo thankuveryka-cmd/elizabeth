@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+.env*.local
+
+# Python bytecode from the ui-ux-pro-max skill scripts
+__pycache__/
+*.pyc
