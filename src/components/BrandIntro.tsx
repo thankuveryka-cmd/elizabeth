@@ -17,8 +17,10 @@ import { TreeMark } from "./TreeMark";
  * И в любом случае уходит по предельному сроку, чтобы не запереть сайт.
  */
 
-const MIN_MS = 900;
-const MAX_MS = 4000;
+/* Короче, чем страховка в CSS (2.4 с), иначе JS пытался бы держать
+   уже снятую заставку. */
+const MIN_MS = 600;
+const MAX_MS = 2100;
 
 export function BrandIntro() {
   const [phase, setPhase] = useState<"hidden" | "in" | "out" | "done">("hidden");

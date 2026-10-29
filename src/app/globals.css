@@ -186,14 +186,42 @@
   display: grid;
   place-items: center;
   background: var(--color-olive-900);
-  transition:
-    transform 0.8s cubic-bezier(0.76, 0, 0.24, 1),
-    opacity 0.8s ease;
+  /* КРИТИЧНО: заставка снимается сама, средствами CSS.
+     Она лежит в статическом HTML и закрывает собой весь экран, поэтому если
+     снимать её только из JavaScript, то при любом сбое скрипта посетитель
+     останется перед пустым оливковым экраном. Анимация ниже гарантирует,
+     что экран откроется при любом исходе. JS лишь ускоряет снятие,
+     когда шрифты и страница уже готовы. */
+  animation: veil-auto 2.4s var(--ease-quiet) forwards;
 }
 
+/* JS успел раньше — снимаем быстро */
 .intro-veil.is-out {
-  transform: translate3d(0, -100%, 0);
-  opacity: 0.9;
+  animation: veil-lift 0.7s var(--ease-quiet) forwards;
+}
+
+@keyframes veil-auto {
+  0%, 70% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -100%, 0);
+    visibility: hidden;
+  }
+}
+
+@keyframes veil-lift {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -100%, 0);
+    visibility: hidden;
+  }
 }
 
 .intro-veil.is-out .intro-mark {
@@ -286,6 +314,13 @@
 }
 
 .reveal-target.is-shown {
+  opacity: 1;
+  transform: none;
+}
+
+/* Без JavaScript проявлять блоки некому — показываем их сразу,
+   иначе половина страницы остаётся невидимой. */
+.no-js .reveal-target {
   opacity: 1;
   transform: none;
 }

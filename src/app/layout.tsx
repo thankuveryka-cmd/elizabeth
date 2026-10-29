@@ -24,7 +24,7 @@ const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
+    <html lang="ru" className="no-js">
       <head>
         {/* Файлы в public отдаются с учётом подпапки, в которой живёт сайт.
             На GitHub Pages это /elizabeth, локально — пусто. */}
@@ -51,6 +51,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        {/* Снимаем метку до первой отрисовки: с JS блоки проявляются по скроллу,
+            без JS остаются видимыми. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.remove('no-js')`,
+          }}
+        />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-3 focus:left-3 focus:bg-olive-800 focus:text-cream-100 focus:px-4 focus:py-3 focus:eyebrow"
